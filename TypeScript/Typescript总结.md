@@ -103,4 +103,228 @@ interface Circle {
 }
 ```
 
+### 装饰器
+
+#### 1.defineProperty
+
+```typescript
+Object.defineProperty(obj, prop, descriptor)
+作用：可以用来精确添加或者修改对象的属性，只需要在descriptor对象中将属性特性描述清楚
+
+1.数据描述符，他拥有四个属性配置
+1.1 configurable:数据是否可删除，可配置
+1.2 enumerable:属性是否可枚举
+1.3 value:属性值，默认为nudefined 
+1.4 writable:属性是否可读写
+
+
+2.存取描述符，他同样拥有四个属性选项
+2.1 configurable:数据是否可删除，可配置
+2.2 enumerable:属性是否可枚举
+2.3 get：一个属性提供getter 的方法，如果没有getter 则为 undefind 
+2.4 set:一个给属性提供setter 的方法，如果没有setter 则为undefind
+
+需要注意的是：数据描述符的value,writable 和 存储描述符中的get,set 属性不能同时存在否则会抛出异常.
+ 
+
+
+let obj = { name: 'zs' }
+let value;
+Object.defineProperty(obj, 'age', {
+     get() {
+         console.log("获取值")
+         console.log(1);
+
+         return value;
+     },
+     set(v: string) {
+         console.log("设置值")
+         value = v;
+    }
+ })
+ console.log(obj);
+```
+
+#### 2.方法的装饰器
+
+```typescript
+/*
+1.方法装饰器
+- 方法装饰器写在在一个方法的声明之前（紧靠着方法声明）。
+- 方法装饰器可以用来监视，修改或者替换方法定义。
+
+- 方法装饰器表达式会在运行时当作函数被调用，传入下列3个参数：
+    + 对于静态方法而言就是当前的类, 对于实例方法而言就是当前的实例
+    + 被绑定方法的名字。
+    + 被绑定方法的属性描述符。
+* 
+*/
+
+target 对于静态方法而言就是当前的类  对于实例方法而言就是当前的实例
+porertykey:被绑定方法的名字
+desriptor:被绑定方法的属性描述符
+
+
+ function test(target: any, proertyKey: string, desriptor: PropertyDescriptor) {
+     console.log(target); // 类 class Person或者 实例 Person();
+     console.log(proertyKey) // sayHello
+     console.log(desriptor) // 
+     //  console.log(desriptor.value)
+    desriptor.value = function () {
+         console.log("我是来替换sayHello的方法")
+    }
+}
+class Person {
+     // @test
+     sayHello() {
+         console.log("你好 typescript")
+     }
+     static sayAge() {
+        console.log("我今年18岁了")
+    }
+ }
+ let zs = new Person();
+ console.log(zs);
+ zs.sayHello();
+```
+
+#### 3.访问器的装饰
+
+```typescript
+/**
+ * 1.访问器装饰器
+ *
+ * - 访问器装饰器声明在一个访问器的声明之前(紧靠着访问器声明)
+ * - 访问器装饰器应用于访问器的属性描述符并且可以用来监听、修改或替换一个访问器的定义
+ * - 访问器装饰器表达式会在运行时当作函数被调用，传入下列三个参数:
+ *  - 对于静态成员来说是类的构造函数，对于实例成员是类的原型对象。
+ *  - 成员的名字
+ *  - 成员的属性描述符
+ *
+ * - 注意:
+ * TypeScript不允许同时装饰一个成员的get和set访问器
+ * 取而代之的是，一个成员的所有装饰器必须应用在文档顺序的第一个访问器上
+ *
+ *
+ */
+
+ target 对于静态方法而言就是当前的类 对于实例方法而言就是当前的实例
+proertyKey: 被绑定方法的名字
+ desriptor 被绑定方法的属性描述符
+
+
+function test(target: any, proertyKey: string, desriptor: PropertyDescriptor) {
+     // console.log(target);
+    // console.log(proertyKey);
+     // console.log(desriptor);
+     // console.log(desriptor);
+
+     desriptor.set = function (value: string) {
+        target.name = value
+     }
+    desriptor.get = () => {
+         // return  desriptor.value + 'aaaaaaaaa'
+         return target.name + '***************'
+     }
+
+}
+
+
+ class Person {
+     private name: string
+
+    constructor(name: string) {
+         this.name = name;
+    }
+
+     // @test
+     public get _name(): string {
+         return this.name
+     }
+     public set _name(v: string) {
+         this.name = v;
+     }
+ }
+
+let zs = new Person('zs');
+
+ // zs._name = 'aaaaa';
+ console.log(zs._name)
+```
+
+#### 4.属性装饰器
+
+```typescript
+/**
+ * 1.属性装饰器
+ * - 属性装饰器写在一个属性声明之前(紧靠着属性声明)
+ * - 属性装饰器表达式会在运行时当作函数被调用，传入下列两个参数:
+ *  + 对于静态属性来说就是当前的类，对于实例属性来说就是当前的实例对象
+ *  + 成员的名字
+ *
+ */
+
+function test(target: any, propertyName: string) {
+    console.log(target, propertyName);
+
+    target.name = 'aaaaaaaaa';
+    console.log(target)
+
+    target.cccc = 23234234;
+}
+
+
+class Person {
+    // @test
+    name: string
+
+    static age: number
+
+    constructor() {
+        this.name = 'zs';
+    }
+
+    static sayHi() {
+        console.log(1111);
+    }
+
+    sayHello() {
+        console.log(22222);
+    }
+}
+// 静态方法 只有类能调用
+// 非静态方法  只有实例能调
+console.log(Person);
+let zs = new Person
+console.log(zs);
+```
+
+#### 5.声明文件
+
+```typescript
+// /**
+//  * 1.参数装饰器
+//  *  - 参数装饰器写在一个参数声明之前(紧靠着参数声明)
+//  *  - 参数装饰器表达式会在运行时当作函数被调用，传入下列三个参数
+//  *    + 对于静态成员来说是当前的类，对于实例成员来说是当前的实例
+//  *    + 参数所在的方法名称
+//  *    + 参数在参数列表中的索引
+//  * 
+//  * 
+//  * 
+//  * 
+//  */
+
+ function test(target:any, fnName: string, index:number){
+   console.log(target, fnName, index);
+ }
+
+ class Person {
+
+  // 检测参数是否符合规则
+   sayHello(name:string, @test age:number){
+     console.log(`我叫${name}, 我今年${age}`);
+  }
+ }
+```
 
